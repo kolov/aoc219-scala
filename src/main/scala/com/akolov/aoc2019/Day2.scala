@@ -4,24 +4,24 @@ import scala.io.Source
 
 object Day2 extends App {
 
-  def readProgram() = {
+  type P = Vector[Int]
+
+  def readProgram(): P = {
     val source = Source
       .fromInputStream(getClass.getResourceAsStream("/input-day-2.txt"))
-    val program = source.getLines.mkString("").split(",").map(_.toInt).toList
+    val program = source.getLines.mkString("").split(",").map(_.toInt).toVector
     source.close()
     program
   }
 
   val program = readProgram
 
-  type P = Map[Int, Int]
-
   def executeAt(pos: Int, p: P): (Boolean, P) = {
 
-    def read(pos: Int) = p.get(p.get(pos).get).get
-    def write(pos: Int, value: Int) = p.updated(p.get(pos).get, value)
+    def read(pos: Int) = p(p(pos))
+    def write(pos: Int, value: Int) = p.updated(p(pos), value)
 
-    p.get(pos).get match {
+    p(pos) match {
       case 1 =>
         (false, write(pos + 3, read(pos + 1) + read(pos + 2)))
       case 2 =>
@@ -39,27 +39,20 @@ object Day2 extends App {
       execute(pos + 4, next)
   }
 
-  def toMap(l: List[Int]) = l.zipWithIndex.map { case (a, b) => (b, a) }.toMap
-
-  def executeList(l: List[Int]) = {
-    execute(0, toMap(l))
-  }
-
   def patch(p: P, noun: Int, verb: Int): P =
     p.updated(1, noun).updated(2, verb)
 
   val answer1 = {
-    execute(0, patch(toMap(program), 12, 2)).get(0).get
+    val e = execute(0, patch(program, 12, 2))
+    e(0)
   }
 
   val answer2 = {
-    val m = toMap(program)
     LazyList
       .from(1, 1)
       .map { i =>
-        val program = patch(m, i / 100, i % 100)
-        val result = execute(0, program)
-        (i, result.get(0).get)
+        val result = execute(0, patch(program, i / 100, i % 100))
+        (i, result(0))
       }
       .filter {
         case (_, r) => r == 19690720
