@@ -41,9 +41,10 @@ object Day3 extends App {
   def distance(p: (Int, Int)) = Math.abs(p._1) + Math.abs(p._2)
 
   val wires = readInput
-  val path0 = wirePoints(wires(0))
-  val path1 = wirePoints(wires(1))
-  val crossings = path0.visited.keys.filter(path1.visited.contains)
+  val paths = wires.map(wirePoints)
+  val crossings = paths.foldLeft(paths.head.visited.keys) {
+    case (points, path) => points.filter(path.visited.contains)
+  }
 
   val answer1 = crossings
     .map(distance)
@@ -52,7 +53,9 @@ object Day3 extends App {
     .head
 
   val answer2 = crossings
-    .map(p => path0.visited.get(p).get + path1.visited.get(p).get)
+    .map(
+      p => paths.foldLeft(0) { case (t, path) => t + path.visited.get(p).get }
+    )
     .toList
     .sorted
     .head
